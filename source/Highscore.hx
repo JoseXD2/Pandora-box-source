@@ -17,7 +17,7 @@ class Highscore
 
 
 		#if !switch
-		NGio.postScore(score, song);
+		
 		#end
 
 
