@@ -290,10 +290,10 @@ class TitleState extends MusicBeatState
 		if (pressedEnter && !transitioning && skippedIntro)
 		{
 			#if !switch
-			NGi
+			
 
 			// If it's Friday according to da clock
-			if (Date.now().getDay() == 5)
+			if (Date.now().getDay()
 				
 			#end
 
