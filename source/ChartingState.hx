@@ -4,7 +4,6 @@ import openfl.display3D.textures.TextureBase;
 import Movement.EffectParams;
 import Movement.SpriteEffect;
 import flixel.addons.ui.interfaces.IEventGetter;
-import io.newgrounds.objects.events.Result.GetCurrentVersionResult;
 import flixel.addons.ui.FlxUIText;
 import haxe.zip.Writer;
 import Conductor.BPMChangeEvent;
