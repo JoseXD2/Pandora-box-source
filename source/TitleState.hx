@@ -289,7 +289,7 @@ class TitleState extends MusicBeatState
 				NG
 			#end
 
-			titleText.animation.play('press');
+			
 
 			FlxG.camera.flash(FlxColor.WHITE, .25); //this will be usefull for me in the future ;) -Ghost
 			FlxG.sound.play(Paths.sound('confirmMenu'), 0.7);
