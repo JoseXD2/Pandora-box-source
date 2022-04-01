@@ -27,7 +27,7 @@ import openfl.Assets;
 import Discord.DiscordClient;
 #end
 
-#if desktop
+#if cpp
 import sys.thread.Thread;
 #end
 
@@ -49,7 +49,20 @@ class TitleState extends MusicBeatState
 
 	override public function create():Void
 	{
+		#if android
+		FlxG.android.preventDefaultKeys = [BACK];
+		#end
 
+		#if polymod
+		polymod.Polymod.init({modRoot: "mods", dirs: ['introMod']});
+		#end
+		
+
+
+		@:privateAccess
+		{
+			trace("Loaded " + openfl.Assets.getLibrary("default").assetsLoaded + " assets (DEFAULT)");
+		}
 		
 		PlayerSettings.init();
 
@@ -76,10 +89,8 @@ class TitleState extends MusicBeatState
 		#end
 
 		FlxG.save.bind('funkin', 'ninjamuffin99');
-		
-		
 
-		GhostEngineData.initSave();
+		KadeEngineData.initSave();
 
 		Highscore.load();
 
@@ -97,9 +108,6 @@ class TitleState extends MusicBeatState
 				StoryMenuState.weekUnlocked[0] = true;
 		}
 
-		FlxG.autoPause = FlxG.save.data.autopause;
-		
-
 		#if FREEPLAY
 		FlxG.switchState(new FreeplayState());
 		#elseif CHARTING
@@ -110,8 +118,6 @@ class TitleState extends MusicBeatState
 			startIntro();
 		});
 		#end
-		PlayState.canRep = false;
-
 	}
 
 	var logoBl:FlxSprite;
@@ -157,7 +163,7 @@ class TitleState extends MusicBeatState
 		// bg.updateHitbox();
 		add(bg);
 
-		logoBl = new FlxSprite(-50, -150);
+		logoBl = new FlxSprite(-150, -100);
 		logoBl.frames = Paths.getSparrowAtlas('logoBumpin');
 		logoBl.antialiasing = true;
 		logoBl.animation.addByPrefix('bump', 'logo bumpin', 24);
@@ -166,7 +172,7 @@ class TitleState extends MusicBeatState
 		// logoBl.screenCenter();
 		// logoBl.color = FlxColor.BLACK;
 
-		gfDance = new FlxSprite(FlxG.width * 0.4, FlxG.height * 0.15);
+		gfDance = new FlxSprite(FlxG.width * 0.4, FlxG.height * 0.07);
 		gfDance.frames = Paths.getSparrowAtlas('gfDanceTitle');
 		gfDance.animation.addByIndices('danceLeft', 'gfDance', [30, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "", 24, false);
 		gfDance.animation.addByIndices('danceRight', 'gfDance', [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], "", 24, false);
@@ -281,43 +287,41 @@ class TitleState extends MusicBeatState
 
 		if (pressedEnter && !transitioning && skippedIntro)
 		{
-			#if !switch
-			
 
-			// If it's Friday according to da clock
-			if (Date.now().getDay() == 5)
-				NG
-			#end
 
-			
+			if (FlxG.save.data.flashing)
+				titleText.animation.play('press');
 
-			FlxG.camera.flash(FlxColor.WHITE, .25); //this will be usefull for me in the future ;) -Ghost
+			FlxG.camera.flash(FlxColor.WHITE, 1);
 			FlxG.sound.play(Paths.sound('confirmMenu'), 0.7);
 
 			transitioning = true;
 			// FlxG.sound.music.stop();
 
-			new FlxTimer().start(.2, function(tmr:FlxTimer)
+			MainMenuState.firstStart = true;
+
+			new FlxTimer().start(2, function(tmr:FlxTimer)
 			{
-
 				// Get current version of Kade Engine
-
+				
 				var http = new haxe.Http("https://raw.githubusercontent.com/KadeDev/Kade-Engine/master/version.downloadMe");
-
-				http.onData = function (data:String) {
-				  /*
-				  	if (!MainMenuState.kadeEngineVer.contains(data.trim()) && !OutdatedSubState.leftState && MainMenuState.nightly == "")
+				var returnedData:Array<String> = [];
+				
+				http.onData = function (data:String)
+				{
+					returnedData[0] = data.substring(0, data.indexOf(';'));
+					returnedData[1] = data.substring(data.indexOf('-'), data.length);
+				  	if (!MainMenuState.kadeEngineVer.contains(returnedData[0].trim()) && !OutdatedSubState.leftState && MainMenuState.nightly == "")
 					{
-						trace('outdated lmao! ' + data.trim() + ' != ' + MainMenuState.kadeEngineVer);
-						OutdatedSubState.needVer = data;
+						trace('outdated lmao! ' + returnedData[0] + ' != ' + MainMenuState.kadeEngineVer);
+						OutdatedSubState.needVer = returnedData[0];
+						OutdatedSubState.currChanges = returnedData[1];
 						FlxG.switchState(new OutdatedSubState());
 					}
 					else
 					{
 						FlxG.switchState(new MainMenuState());
-					}*/
-					FlxG.switchState(new MainMenuState());
-					//i dont wanna get notifications of this being outdated, but whatever move on
+					}
 				}
 				
 				http.onError = function (error) {
@@ -326,12 +330,11 @@ class TitleState extends MusicBeatState
 				}
 				
 				http.request();
-
 			});
 			// FlxG.sound.play(Paths.music('titleShoot'), 0.7);
 		}
 
-		if (pressedEnter && !skippedIntro)
+		if (pressedEnter && !skippedIntro && initialized)
 		{
 			skipIntro();
 		}
@@ -339,7 +342,7 @@ class TitleState extends MusicBeatState
 		super.update(elapsed);
 	}
 
-	function createCoolText(textArray:Array<String>) 
+	function createCoolText(textArray:Array<String>)
 	{
 		for (i in 0...textArray.length)
 		{
@@ -371,8 +374,7 @@ class TitleState extends MusicBeatState
 
 	override function beatHit()
 	{
-		super.beatHit(); //the definition of this function makes me feel rick rolled for some reason, which now that i think of is the fricking function we are overriding rn
-						//update from ghost of the future tf was i saying in the comment above i mean it doesnt make any sense wtf
+		super.beatHit();
 
 		logoBl.animation.play('bump');
 		danceLeft = !danceLeft;
@@ -400,12 +402,12 @@ class TitleState extends MusicBeatState
 			// credTextShit.screenCenter();
 			case 5:
 				if (Main.watermarks)
-					createCoolText(['Ghost Engine', 'by']);
+					createCoolText(['Kade Engine', 'by']);
 				else
 					createCoolText(['In Partnership', 'with']);
 			case 7:
 				if (Main.watermarks)
-					addMoreText('Ghost 4420576');
+					addMoreText('KadeDeveloper');
 				else
 				{
 					addMoreText('Newgrounds');
@@ -452,7 +454,7 @@ class TitleState extends MusicBeatState
 		{
 			remove(ngSpr);
 
-			FlxG.camera.flash(FlxColor.WHITE, 1);
+			FlxG.camera.flash(FlxColor.WHITE, 4);
 			remove(credGroup);
 			skippedIntro = true;
 		}
