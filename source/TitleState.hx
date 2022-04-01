@@ -49,15 +49,7 @@ class TitleState extends MusicBeatState
 
 	override public function create():Void
 	{
-		#if polymod
-		polymod.Polymod.init({modRoot: "mods", dirs: ['introMod']});
-		#end
-		
-		#if sys
-		if (!sys.FileSystem.exists(Sys.getCwd() + "/assets/replays"))
-			sys.FileSystem.createDirectory(Sys.getCwd() + "/assets/replays");
-		#end
-
+	
 		
 		PlayerSettings.init();
 
@@ -297,7 +289,7 @@ class TitleState extends MusicBeatState
 				
 			#end
 
-			titleText.animation.play('press');
+			
 
 			FlxG.camera.flash(FlxColor.WHITE, .25); //this will be usefull for me in the future ;) -Ghost
 			FlxG.sound.play(Paths.sound('confirmMenu'), 0.7);
